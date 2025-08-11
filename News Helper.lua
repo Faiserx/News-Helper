@@ -51,10 +51,10 @@ update_found = false -- Если будет true, будет доступна к
 local script_vers = 3.0
 local script_vers_text = "3.0 release" -- Название нашей версии. В будущем будем её выводить пользователю.
 
-local update_url = 'https://raw.githubusercontent.com/Faiserx/NewsHelper/refs/heads/main/update.ini' -- Путь к ini файлу. Позже нам понадобиться.
+local update_url = 'https://raw.githubusercontent.com/Faiserx/News-Helper/refs/heads/main/update.ini' -- Путь к ini файлу. Позже нам понадобиться.
 local update_path = getWorkingDirectory() .. "/update.ini"
 
-local script_url = 'https://raw.githubusercontent.com/Faiserx/NewsHelper/refs/heads/main/News%20Helper.lua' -- Путь скрипту.
+local script_url = 'https://raw.githubusercontent.com/Faiserx/News-Helper/refs/heads/main/News%20Helper.lua' -- Путь скрипту.
 local script_path = thisScript().path
 
 function check_update() -- Создаём функцию которая будет проверять наличие обновлений при запуске скрипта.
