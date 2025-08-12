@@ -57,13 +57,17 @@ local update_path = getWorkingDirectory() .. "/update.ini"
 local script_url = 'https://raw.githubusercontent.com/Faiserx/News-Helper/refs/heads/main/News%20Helper.lua' -- Путь скрипту.
 local script_path = thisScript().path
 
-function check_update() -- Создаём функцию которая будет проверять наличие обновлений при запуске скрипта.
+function check_update()
     downloadUrlToFile(update_url, update_path, function(id, status)
         if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-            updateIni = inicfg.load(nil, update_path)
-            if tonumber(updateIni.info.vers) > script_vers then -- Сверяем версию в скрипте и в ini файле на github
-                sampAddChatMessage(u8:decode(tag..'Обнаружена новая версия скрипта: '..updateIni.info.vers_text), -1) -- Сообщаем о новой версии.
-                update_found = true -- если обновление найдено, ставим переменной значение true
+            local iniData = inicfg.load(nil, update_path)
+            if iniData and iniData.info and iniData.info.vers then
+                if tonumber(iniData.info.vers) > script_vers then
+                    sampAddChatMessage(u8:decode(tag .. 'Обнаружена новая версия скрипта: ' .. iniData.info.vers_text), -1)
+                    update_found = true
+                end
+            else
+                sampAddChatMessage(u8:decode(tag .. 'Ошибка проверки обновления. Попробуйте еще раз!'), -1)
             end
             os.remove(update_path)
         end
@@ -109,7 +113,7 @@ function main()
 			end
 		end
 	end)
-	sampAddChatMessage(u8:decode(tag .. 'Команды активации скрипта: {6495ED}/nh, /newshelp{C0C0C0}. Приятного пользования!'), 0xFFFFFF)
+	sampAddChatMessage(u8:decode(tag .. 'Активация: {6495ED}/nh{C0C0C0}. Приятного пользования!'), 0xFFFFFF)
 	while true do
 		wait(0)
 		if update_state then -- Если человек напишет /update и обновлени есть, начнётся скаачивание скрипта.
@@ -191,28 +195,24 @@ imgui.OnFrame(function() return rMain[0] end,
 			imgui.BeginChild(id_name .. 'child_window_1', imgui.ImVec2(imgui.GetWindowWidth() - 6, 30), false)
 				imgui.TextCenter('News Helper')
 			imgui.EndChild()
-
 			imgui.SetCursorPos(imgui.ImVec2(3, 45))
 			imgui.BeginChild(id_name .. 'child_window_2', imgui.ImVec2(170, imgui.GetWindowHeight() - 45), true)
-				imgui.SetCursorPosX(22)
+				imgui.SetCursorPosX(28)
+				imgui.SetCursorPosY(imgui.GetWindowHeight()/2/2)
 				imgui.CustomMenu({
 					'Главная',
 					'Редакция',
 					'Эфиры',
 					'Настройки'
-				}, mainPages, imgui.ImVec2(130, 32), 0.08, true, 9, false)
+				}, mainPages, imgui.ImVec2(125, 32), 0.08, true, 9, false)
 			imgui.EndChild()
-
 			imgui.SameLine()
-
 			imgui.SetCursorPosX(171)
 			imgui.BeginChild(id_name .. 'child_window_3', imgui.ImVec2(imgui.GetWindowWidth() - 154, imgui.GetWindowHeight() - 45), true, imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
-			
 				if mainPages[0] == 1 then imgui.WindowMain()
 				elseif mainPages[0] == 2 then imgui.LocalSettings()
 				elseif mainPages[0] == 3 then imgui.LocalEsters()
-				elseif mainPages[0] == 4 then imgui.ScrSettings() end
-				
+				elseif mainPages[0] == 4 then imgui.ScrSettings() end	
 			imgui.EndChild()
 		imgui.End()
 		imgui.SetMouseCursor(-1)
@@ -255,30 +255,27 @@ imgui.OnFrame(function() return rHelp[0] end,
 imgui.OnFrame(function() return rFastM[0] end,
 	function(player)
 		imgui.SetNextWindowPos(imgui.ImVec2(sizeX / 1.1, sizeY / 1.2), imgui.Cond.FirstUseEver, imgui.ImVec2(1, 1))
-		imgui.SetNextWindowSize(imgui.ImVec2(500, 300), imgui.Cond.FirstUseEver + imgui.WindowFlags.NoResize)
+		imgui.SetNextWindowSize(imgui.ImVec2(500, 320), imgui.Cond.FirstUseEver + imgui.WindowFlags.NoResize)
 		imgui.Begin('Меню быстрого доступа ##window_4', rFastM, imgui.WindowFlags.NoCollapse + imgui.WindowFlags.NoResize + imgui.WindowFlags.NoScrollWithMouse + imgui.WindowFlags.NoScrollbar --[[+ imgui.WindowFlags.NoTitleBar]]) -- + imgui.WindowFlags.AlwaysAutoResize imgui.TabBarFlags.NoCloseWithMiddleMouseButton
 			imgui.SetCursorPosY(19)
-			imgui.BeginChild(id_name .. 'child_window_6', imgui.ImVec2((imgui.GetWindowWidth() - wPaddX*2) / 1.7, imgui.GetWindowHeight() - 2 - wPaddY*2), false)
-				imgui.SetCursorPosY(10)
+			imgui.BeginChild(id_name .. 'child_window_6', imgui.ImVec2(280, 310), false)
+				imgui.SetCursorPosY(15)
 				if fastPages[0] == 1 then imgui.FmInterviews()
 				elseif fastPages[0] == 2 then imgui.AdvRules()
-				elseif fastPages[0] == 3 then imgui.newsRules()
+				elseif fastPages[0] == 3 then imgui.NewsRules()
 				elseif fastPages[0] == 4 then imgui.LeaderActions() end
 				imgui.NewLine()
 			imgui.EndChild()
 			imgui.SameLine(0, 0)
-			
-			imgui.BeginChild(id_name .. 'child_window_7', imgui.ImVec2(imgui.GetWindowWidth() - ((imgui.GetWindowWidth() - wPaddX*2) / 1.7) - 2 - wPaddX, imgui.GetWindowHeight() - 2 - wPaddY*2), true)
+			imgui.BeginChild(id_name .. 'child_window_7', imgui.ImVec2(220, 310), true)
 				imgui.TextCenter(tmp.rolePlay and '{CC0000}Ждём работает бинд' or ' ')
 				imgui.TextCenter('Имя: '..tmp.targetPlayer.nick)
 				imgui.TextCenter('Лет в штате: '..tmp.targetPlayer.score)
 				imgui.NewLine()
-				
 				imgui.Separator()
-
 				imgui.NewLine()
 				imgui.SetCursorPosX(46)
-				imgui.CustomMenu({'Собеседование', 'Проверка ПРО',  'Проверка ППЭ', 'Лидерские действия'}, fastPages, imgui.ImVec2(120, 35), 0.08, true, 15)
+				imgui.CustomMenu({'Собеседование', 'Проверка ПРО',  'Проверка ППЭ', 'Лидерские действия'}, fastPages, imgui.ImVec2(120, 30), 0.08, true, 15)
 			imgui.EndChild()
 		imgui.End()
 		imgui.SetMouseCursor(-1)
@@ -320,11 +317,11 @@ function ev.onServerMessage(color, text)
 		return false
 	end
 end
-function imgui.MeNotepad(arrName)
+function imgui.MeNotepad(arrName, size)
 	imgui.TextCenter(' Блокнот \\ Заметки')
 	local txtNotp = esterscfg.events[arrName].notepad or ''
 	imgui.StrCopy(iptNotepad, iptTmp.notepad[arrName] or txtNotp)
-	if imgui.InputTextMultiline(id_name..'input_multiline_1', iptNotepad, sizeof(iptNotepad) - 1, imgui.ImVec2(imgui.GetWindowWidth(), imgui.GetWindowHeight() - imgui.GetCursorPosY()-1)) then
+	if imgui.InputTextMultiline(id_name..'input_multiline_1', iptNotepad, sizeof(iptNotepad) - 1, size) then
 		iptTmp.notepad[arrName] = str(iptNotepad)
 	end
 	if  not imgui.IsItemActive() and txtNotp ~= str(iptNotepad) then
@@ -332,6 +329,7 @@ function imgui.MeNotepad(arrName)
 		saveFile('estersBind.cfg', esterscfg)
 	end
 end
+
 function imgui.WindowMain() 
 	imgui.BeginChild(id_name..'child_7', imgui.ImVec2(imgui.GetWindowWidth() - 80, 180), false, 0)
 		imgui.TextWrapped('Скрипт-помощник для сотрудников СМИ.\nЭтот скрипт предназначен исключительно для оказания поддержки, а не для автоматизации процессов. Он не выполняет функции "бота" и ориентирован на соответствие правилам. В большинстве случаев его использование допускается на серверах, однако перед применением рекомендуется уточнить разрешение у главных администраторов. Разработчик не несёт ответственности за возможную блокировку аккаунта.\nЗа основу взят скрипт от kvisk.')
@@ -346,6 +344,7 @@ function imgui.WindowMain()
 		end
 	imgui.EndChild()
 end
+
 function imgui.LocalSettings() 
 	imgui.SetCursorPosX(imgui.GetWindowWidth() / 2 - 112)
 	if imgui.HeaderButton(buttonPages[1], ' Объявления ') then
@@ -543,7 +542,7 @@ end
 function imgui.AutoBindButton()
 	local centSize = (imgui.GetWindowWidth() - (math.floor((imgui.GetWindowWidth() + 6) / 270) * 270 - 6)) / 2
 	imgui.BeginChild(id_name..'child_window_25', imgui.ImVec2(imgui.GetWindowWidth() - 12, imgui.GetWindowHeight() - 40), false)
-		imgui.SetCursorPos(imgui.ImVec2(imgui.GetWindowWidth() / 2, 15))
+		imgui.SetCursorPos(imgui.ImVec2(150, imgui.GetCursorPosY() + 10))
 		hotkey.List['addNewBtn'] = hotkey.List['addNewBtn'] or {['keys'] = {}, ['callback'] = nil}
 		KeyEditor('addNewBtn', nil, imgui.ImVec2(80,30))
 
@@ -752,7 +751,7 @@ function imgui.Mathematics()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 142)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Награда')
 		imgui.Tooltip('Напишите сюда награду за эфир')
 		imgui.SameLine()
@@ -776,7 +775,7 @@ function imgui.Mathematics()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 88)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Раунды')
 		imgui.Tooltip('До скольки баллов будем играть?')
 		imgui.SameLine()
@@ -795,8 +794,8 @@ function imgui.Mathematics()
 		})
 	imgui.EndChild()
 
-	imgui.SameLine()
-
+	--imgui.SameLine()
+	imgui.SetCursorPos(imgui.ImVec2(335, 0))
 	imgui.BeginChild(id_name..'child_window_12', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
 		imgui.TextCenter('Калькулятор')
 
@@ -814,15 +813,15 @@ function imgui.Mathematics()
 		imgui.Tooltip('Введите математический\nпример, доступные символы:\n\n + прибавить\n - вычесть\n * умножить\n / разделить (наклон важен!)\n ^ возвести в степень\n () для первенства выражения')
 
 		imgui.SameLine(nil, 4)
-		if imgui.Button('Х'..id_name..'button_12', imgui.ImVec2(18,20)) then
+		if imgui.Button('Х'..id_name..'button_12', imgui.ImVec2(23,26)) then
 			iptTmp.iptCal1 = nil
 			iptTmp.iptCal2 = nil
 		end
 		imgui.Tooltip('Очистить')
 
-		imgui.SetCursorPosX(8)
+		imgui.SetCursorPos(imgui.ImVec2(10, imgui.GetCursorPosY()+5))
 		imgui.Text('Результат')
-		imgui.SameLine()
+		imgui.SetCursorPos(imgui.ImVec2(imgui.GetCursorPosX()+75, imgui.GetCursorPosY()-25))
 		imgui.PushItemWidth(imgui.GetWindowWidth() - 20 - 67)
 		local iptCal2 = new.char[256]('')
 		imgui.StrCopy(iptCal2, iptTmp.iptCal2 or '')
@@ -832,11 +831,11 @@ function imgui.Mathematics()
 		imgui.Separator()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
 
-		imgui.MeNotepad('mathem')
+		imgui.MeNotepad('mathem', imgui.ImVec2(170, 200))
 	imgui.EndChild()
 end
-function imgui.ChemicElements()
-	imgui.BeginChild(id_name..'child_window_17', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3) * 2 - 8, imgui.GetWindowHeight()), false)
+function imgui.Capitals()
+	imgui.BeginChild(id_name..'child_window_27', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3) * 2 - 8, imgui.GetWindowHeight()), false)
 		imgui.SetCursorPosX(1)
 		imgui.PushItemWidth(30)
 		local iptID = new.char[256]('')
@@ -854,7 +853,7 @@ function imgui.ChemicElements()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 142)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Награда')
 		imgui.Tooltip('Напишите сюда награду за эфир')
 		imgui.SameLine()
@@ -878,7 +877,7 @@ function imgui.ChemicElements()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 88)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Раунды')
 		imgui.Tooltip('До скольки баллов будем играть?')
 		imgui.SameLine()
@@ -889,7 +888,7 @@ function imgui.ChemicElements()
 			iptTmp.iptScr = str(iptScr)
 		end
 
-		imgui.RenderButtonEf(esterscfg.events.chemic, {
+		imgui.RenderButtonEf(esterscfg.events.capitals, {
 			{'prize', iptTmp.iptPrz or '1 млн', '1 млн', 'У вас не указанна {fead00}награда{C0C0C0} за данный эфир!', 'Награда за эфир'},
 			{'scores', iptTmp.iptScr or '5', '3', 'У вас не указанно сколько {fead00}раундов{C0C0C0} будет в эфире!', 'Количество раундов'},
 			{'scoreID', iptTmp.iptScrId, '2', 'У вас не указанно сколько {fead00}баллов{C0C0C0} у человека!', 'Количество баллов у человека'},
@@ -899,22 +898,27 @@ function imgui.ChemicElements()
 
 	imgui.SameLine()
 
-	imgui.BeginChild(id_name..'child_window_18', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
-		local chemicElem = {'H = Водород', 'He = Гелий', 'Li = Литий', 'Be = Берилий', 'B = Бор', 'C = Углерод', 'N = Азот', 'O = Кислород',
-			'F = Фтор', 'Ne = Неон', 'Na = Натрий', 'Mg = Магний', 'Al = Алюминий', 'Si = Кремний', 'P = Фосфор', 'S = Сера', 'Cl = Хлор',
-			'Ar = Аргон', 'K = Калий', 'Ca = Кальций', 'Sc = Скандий', 'Ti = Титан', 'V = Ванадий', 'Cr = Хром', 'Mn = Марганец', 'Fe = Железо',
-			'Co = Кобальт', 'Cu = Медь', 'Zn = Цинк', 'Ga = Галий', 'Ge = Германий', 'As = Мышьяк', 'Se = Селен', 'Br = Бром', 'Kr = Криптон'
+	imgui.BeginChild(id_name..'child_window_28', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
+		local capitalsCities = {
+			'Австрия = Вена', 'Аргентина = Буэнос-Айрес', 'Армения = Ереван', 'Белоруссия = Минск', 'Бельгия = Брюссель', 'Болгария = София',
+			'Великобритания = Лондон', 'Вьетнам = Ханой', 'Германия = Берлин', 'Греция = Афины', 'Грузия = Тбилиси', 'Дания = Копенгаген',
+			'Египет = Каир', 'Индия = Нью-Дели', 'Ирак = Багдад', 'Иран = Тегеран', 'Испания = Мадрид', 'Канада = Оттава', 'Китай = Пекин',
+			'Куба = Гавана', 'Латвия = Рига', 'Литва = Вильнюс', 'Мексика = Мехико', 'Молдавия = Кишинев', 'Монголия = Улан-Батор',
+			'Нидерланды (Голландия) = Амстердам', 'Норвегия = Осло', 'Перу = Лима', 'Польша = Варшава', 'Португалия = Лиссабон',
+			'Россия = Москва', 'США = Вашингтон', 'Сирия = Дамаск', 'Словакия = Братислава', 'Словения = Любляна', 'Тунис = Тунис',
+			'Турция = Анкара', 'Украина = Киев', 'Уругвай = Монтевидео', 'Финляндия = Хельсинки', 'Франция = Париж', 'Хорватия = Загреб',
+			'Чехия = Прага', 'Чили = Сантьяго', 'Швейцария = Берн', 'Швеция = Стокгольм', 'Эстония = Таллин', 'Япония = Токио'
 		}
 		imgui.BeginChild(id_name..'child_window_24', imgui.ImVec2(imgui.GetWindowWidth(), imgui.GetWindowHeight() / 2 - 10), false)
-			for i, element in ipairs(chemicElem) do
-				local txtChat = '/news '..esterscfg.events.chemic.tag..element:sub(1, element:find(' ')-1)..' = ?'
+			for i, capital in ipairs(capitalsCities) do
+				local txtChat = '/news '..esterscfg.events.capitals.tag..capital:sub(1, capital:find(' ')-1)..' = ?'
 				if imgui.Selectable(id_name..'selec_table_HIM_'..i, nil) then
 					sampSetChatInputEnabled(true)
 					sampSetChatInputText(u8:decode(txtChat))
 				end
 				imgui.Tooltip('Крикабельно, вставит в чат:\n\n'..txtChat)
-				imgui.SameLine(nil, imgui.GetWindowWidth() / 2 - 45)
-				imgui.Text(element)
+				imgui.SameLine(nil, imgui.GetWindowWidth() / 2 - 80)
+				imgui.Text(capital)
 			end
 		imgui.EndChild()
 
@@ -922,7 +926,76 @@ function imgui.ChemicElements()
 		imgui.Separator()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
 
-		imgui.MeNotepad('chemic')
+
+		imgui.MeNotepad('capitals', imgui.ImVec2(150, 150))
+	imgui.EndChild()
+end
+function imgui.ToHide()
+	imgui.BeginChild(id_name..'child_window_19', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3) * 2 - 8, imgui.GetWindowHeight()), false)
+		imgui.SetCursorPosX(1)
+		imgui.PushItemWidth(30)
+		local iptID = new.char[256]('')
+		imgui.StrCopy(iptID, iptTmp.iptID or '')
+		if imgui.InputText(id_name..'input_9', iptID, sizeof(iptID) - 1, 16) then
+			iptTmp.iptID = str(iptID)
+			tmp.evNick = nil
+			if tonumber(str(iptID)) and sampIsPlayerConnected(str(iptID)) then
+				tmp.evNick = sampGetPlayerNickname(str(iptID)):gsub('_', ' '):gsub('^%[%d%d?%]', '')
+			end
+		end
+		imgui.SameLine()
+		imgui.Text('ID игрока')
+		imgui.Tooltip('ID для взаимодействия с человеком')
+
+		imgui.SameLine()
+
+		imgui.SetCursorPosX(imgui.GetWindowWidth() - 170)
+		imgui.Text('Награда')
+		imgui.Tooltip('Напишите сюда награду за эфир')
+		imgui.SameLine()
+		imgui.PushItemWidth(80)
+		local iptPrz = new.char[256]('')
+		imgui.StrCopy(iptPrz, iptTmp.iptPrz or '1 млн')
+		if imgui.InputText(id_name..'input_11', iptPrz, sizeof(iptPrz) - 1) then
+			iptTmp.iptPrz = str(iptPrz)
+		end
+
+		imgui.SetCursorPosX(1)
+		imgui.PushItemWidth(125)
+		local iptPhrase = new.char[256]('')
+		imgui.StrCopy(iptPhrase, iptTmp.iptPhrase or '')
+		if imgui.InputTextWithHint(id_name..'input_10', 'Вкусная клубника', iptPhrase, sizeof(iptPhrase) - 1) then
+			iptTmp.iptPhrase = str(iptPhrase)
+		end
+		imgui.SameLine()
+		imgui.Text('Фраза')
+		imgui.Tooltip('Фраза, которую человек должен\nсказать как приблизится к вам!')
+
+		imgui.SameLine()
+
+		imgui.SetCursorPosX(imgui.GetWindowWidth() - 170)
+		imgui.Text('Время')
+		imgui.Tooltip('Сколько будет идти данный эфир?')
+		imgui.SameLine()
+		imgui.PushItemWidth(30)
+		local iptTime = new.char[256]('')
+		imgui.StrCopy(iptTime, iptTmp.iptTime or '50')
+		if imgui.InputText(id_name..'input_12', iptTime, sizeof(iptTime) - 1) then
+			iptTmp.iptTime = str(iptTime)
+		end
+
+		imgui.RenderButtonEf(esterscfg.events.tohide, {
+			{'prize', iptTmp.iptPrz or '1 млн', '1 млн', 'У вас не указана {fead00}награда{C0C0C0} за данный эфир!', 'Награда за эфир'},
+			{'time', iptTmp.iptTime or '50', '40', 'У вас не указанно сколько {fead00}времени{C0C0C0} будет этот эфир!', 'Длительность эфира'},
+			{'phrase', iptTmp.iptPhrase, 'Вкусная клубника', 'У вас не указана {fead00}фраза{C0C0C0} которую нужно сказать!', 'Фраза которую нужно озвучить'},
+			{'ID', tmp.evNick, 'Rudius Greyrat', 'У вас не указан {fead00}ID{C0C0C0} человека!', 'Имя человека'}
+		})
+	imgui.EndChild()
+
+	imgui.SameLine()
+	imgui.SetCursorPosX(330)
+	imgui.BeginChild(id_name..'child_window_20', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
+		imgui.MeNotepad('tohide', imgui.ImVec2(175, 300))
 	imgui.EndChild()
 end
 function imgui.Greetings()
@@ -944,7 +1017,7 @@ function imgui.Greetings()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 81)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Время')
 		imgui.Tooltip('Сколько будет идти данный эфир?')
 		imgui.SameLine()
@@ -996,11 +1069,11 @@ function imgui.Greetings()
 	imgui.SameLine()
 
 	imgui.BeginChild(id_name..'child_window_20', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
-		imgui.MeNotepad('greet')
+		imgui.MeNotepad('greet', imgui.ImVec2(150, 300))
 	imgui.EndChild()
 end
-function imgui.ToHide()
-	imgui.BeginChild(id_name..'child_window_19', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3) * 2 - 8, imgui.GetWindowHeight()), false)
+function imgui.ChemicElements()
+	imgui.BeginChild(id_name..'child_window_17', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3) * 2 - 8, imgui.GetWindowHeight()), false)
 		imgui.SetCursorPosX(1)
 		imgui.PushItemWidth(30)
 		local iptID = new.char[256]('')
@@ -1018,75 +1091,7 @@ function imgui.ToHide()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 142)
-		imgui.Text('Награда')
-		imgui.Tooltip('Напишите сюда награду за эфир')
-		imgui.SameLine()
-		imgui.PushItemWidth(80)
-		local iptPrz = new.char[256]('')
-		imgui.StrCopy(iptPrz, iptTmp.iptPrz or '1 млн')
-		if imgui.InputText(id_name..'input_11', iptPrz, sizeof(iptPrz) - 1) then
-			iptTmp.iptPrz = str(iptPrz)
-		end
-
-		imgui.SetCursorPosX(1)
-		imgui.PushItemWidth(138)
-		local iptPhrase = new.char[256]('')
-		imgui.StrCopy(iptPhrase, iptTmp.iptPhrase or '')
-		if imgui.InputTextWithHint(id_name..'input_10', 'Вкусная клубника', iptPhrase, sizeof(iptPhrase) - 1) then
-			iptTmp.iptPhrase = str(iptPhrase)
-		end
-		imgui.SameLine()
-		imgui.Text('Фраза')
-		imgui.Tooltip('Фраза, которую человек должен\nсказать как приблизится к вам!')
-
-		imgui.SameLine()
-
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 81)
-		imgui.Text('Время')
-		imgui.Tooltip('Сколько будет идти данный эфир?')
-		imgui.SameLine()
-		imgui.PushItemWidth(30)
-		local iptTime = new.char[256]('')
-		imgui.StrCopy(iptTime, iptTmp.iptTime or '50')
-		if imgui.InputText(id_name..'input_12', iptTime, sizeof(iptTime) - 1) then
-			iptTmp.iptTime = str(iptTime)
-		end
-
-		imgui.RenderButtonEf(esterscfg.events.tohide, {
-			{'prize', iptTmp.iptPrz or '1 млн', '1 млн', 'У вас не указана {fead00}награда{C0C0C0} за данный эфир!', 'Награда за эфир'},
-			{'time', iptTmp.iptTime or '50', '40', 'У вас не указанно сколько {fead00}времени{C0C0C0} будет этот эфир!', 'Длительность эфира'},
-			{'phrase', iptTmp.iptPhrase, 'Вкусная клубника', 'У вас не указана {fead00}фраза{C0C0C0} которую нужно сказать!', 'Фраза которую нужно озвучить'},
-			{'ID', tmp.evNick, 'Rudius Greyrat', 'У вас не указан {fead00}ID{C0C0C0} человека!', 'Имя человека'}
-		})
-	imgui.EndChild()
-
-	imgui.SameLine()
-
-	imgui.BeginChild(id_name..'child_window_20', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
-		imgui.MeNotepad('tohide')
-	imgui.EndChild()
-end
-function imgui.Capitals()
-	imgui.BeginChild(id_name..'child_window_27', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3) * 2 - 8, imgui.GetWindowHeight()), false)
-		imgui.SetCursorPosX(1)
-		imgui.PushItemWidth(30)
-		local iptID = new.char[256]('')
-		imgui.StrCopy(iptID, iptTmp.iptID or '')
-		if imgui.InputText(id_name..'input_9', iptID, sizeof(iptID) - 1, 16) then
-			iptTmp.iptID = str(iptID)
-			tmp.evNick = nil
-			if tonumber(str(iptID)) and sampIsPlayerConnected(str(iptID)) then
-				tmp.evNick = sampGetPlayerNickname(str(iptID)):gsub('_', ' '):gsub('^%[%d%d?%]', '')
-			end
-		end
-		imgui.SameLine()
-		imgui.Text('ID игрока')
-		imgui.Tooltip('ID для взаимодействия с человеком')
-
-		imgui.SameLine()
-
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 142)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Награда')
 		imgui.Tooltip('Напишите сюда награду за эфир')
 		imgui.SameLine()
@@ -1110,7 +1115,7 @@ function imgui.Capitals()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 88)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Раунды')
 		imgui.Tooltip('До скольки баллов будем играть?')
 		imgui.SameLine()
@@ -1121,7 +1126,7 @@ function imgui.Capitals()
 			iptTmp.iptScr = str(iptScr)
 		end
 
-		imgui.RenderButtonEf(esterscfg.events.capitals, {
+		imgui.RenderButtonEf(esterscfg.events.chemic, {
 			{'prize', iptTmp.iptPrz or '1 млн', '1 млн', 'У вас не указанна {fead00}награда{C0C0C0} за данный эфир!', 'Награда за эфир'},
 			{'scores', iptTmp.iptScr or '5', '3', 'У вас не указанно сколько {fead00}раундов{C0C0C0} будет в эфире!', 'Количество раундов'},
 			{'scoreID', iptTmp.iptScrId, '2', 'У вас не указанно сколько {fead00}баллов{C0C0C0} у человека!', 'Количество баллов у человека'},
@@ -1129,29 +1134,24 @@ function imgui.Capitals()
 		})
 	imgui.EndChild()
 
-	imgui.SameLine()
+	imgui.SameLine(330)
 
-	imgui.BeginChild(id_name..'child_window_28', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
-		local capitalsCities = {
-			'Австрия = Вена', 'Аргентина = Буэнос-Айрес', 'Армения = Ереван', 'Белоруссия = Минск', 'Бельгия = Брюссель', 'Болгария = София',
-			'Великобритания = Лондон', 'Вьетнам = Ханой', 'Германия = Берлин', 'Греция = Афины', 'Грузия = Тбилиси', 'Дания = Копенгаген',
-			'Египет = Каир', 'Индия = Нью-Дели', 'Ирак = Багдад', 'Иран = Тегеран', 'Испания = Мадрид', 'Канада = Оттава', 'Китай = Пекин',
-			'Куба = Гавана', 'Латвия = Рига', 'Литва = Вильнюс', 'Мексика = Мехико', 'Молдавия = Кишинев', 'Монголия = Улан-Батор',
-			'Нидерланды (Голландия) = Амстердам', 'Норвегия = Осло', 'Перу = Лима', 'Польша = Варшава', 'Португалия = Лиссабон',
-			'Россия = Москва', 'США = Вашингтон', 'Сирия = Дамаск', 'Словакия = Братислава', 'Словения = Любляна', 'Тунис = Тунис',
-			'Турция = Анкара', 'Украина = Киев', 'Уругвай = Монтевидео', 'Финляндия = Хельсинки', 'Франция = Париж', 'Хорватия = Загреб',
-			'Чехия = Прага', 'Чили = Сантьяго', 'Швейцария = Берн', 'Швеция = Стокгольм', 'Эстония = Таллин', 'Япония = Токио'
+	imgui.BeginChild(id_name..'child_window_18', imgui.ImVec2(math.floor(imgui.GetWindowWidth() / 3), imgui.GetWindowHeight()), false)
+		local chemicElem = {'H = Водород', 'He = Гелий', 'Li = Литий', 'Be = Берилий', 'B = Бор', 'C = Углерод', 'N = Азот', 'O = Кислород',
+			'F = Фтор', 'Ne = Неон', 'Na = Натрий', 'Mg = Магний', 'Al = Алюминий', 'Si = Кремний', 'P = Фосфор', 'S = Сера', 'Cl = Хлор',
+			'Ar = Аргон', 'K = Калий', 'Ca = Кальций', 'Sc = Скандий', 'Ti = Титан', 'V = Ванадий', 'Cr = Хром', 'Mn = Марганец', 'Fe = Железо',
+			'Co = Кобальт', 'Cu = Медь', 'Zn = Цинк', 'Ga = Галий', 'Ge = Германий', 'As = Мышьяк', 'Se = Селен', 'Br = Бром', 'Kr = Криптон'
 		}
 		imgui.BeginChild(id_name..'child_window_24', imgui.ImVec2(imgui.GetWindowWidth(), imgui.GetWindowHeight() / 2 - 10), false)
-			for i, capital in ipairs(capitalsCities) do
-				local txtChat = '/news '..esterscfg.events.capitals.tag..capital:sub(1, capital:find(' ')-1)..' = ?'
+			for i, element in ipairs(chemicElem) do
+				local txtChat = '/news '..esterscfg.events.chemic.tag..element:sub(1, element:find(' ')-1)..' = ?'
 				if imgui.Selectable(id_name..'selec_table_HIM_'..i, nil) then
 					sampSetChatInputEnabled(true)
 					sampSetChatInputText(u8:decode(txtChat))
 				end
 				imgui.Tooltip('Крикабельно, вставит в чат:\n\n'..txtChat)
-				imgui.SameLine(nil, imgui.GetWindowWidth() / 2 - 80)
-				imgui.Text(capital)
+				imgui.SameLine(nil, imgui.GetWindowWidth() / 2 - 45)
+				imgui.Text(element)
 			end
 		imgui.EndChild()
 
@@ -1159,8 +1159,7 @@ function imgui.Capitals()
 		imgui.Separator()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
 
-
-		imgui.MeNotepad('capitals')
+		imgui.MeNotepad('chemic', imgui.ImVec2(175, 150))
 	imgui.EndChild()
 end
 function imgui.Interpreter()
@@ -1182,7 +1181,7 @@ function imgui.Interpreter()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 142)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Награда')
 		imgui.Tooltip('Напишите сюда награду за эфир')
 		imgui.SameLine()
@@ -1206,7 +1205,7 @@ function imgui.Interpreter()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 88)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Раунды')
 		imgui.Tooltip('До скольки баллов будем играть?')
 		imgui.SameLine()
@@ -1301,7 +1300,7 @@ function imgui.Interpreter()
 		imgui.Separator()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
 
-		imgui.MeNotepad('interpreter')
+		imgui.MeNotepad('interpreter', imgui.ImVec2(150, 200))
 	imgui.EndChild()
 end
 function imgui.Mirror()
@@ -1323,7 +1322,7 @@ function imgui.Mirror()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 142)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Награда')
 		imgui.Tooltip('Напишите сюда награду за эфир')
 		imgui.SameLine()
@@ -1347,7 +1346,7 @@ function imgui.Mirror()
 
 		imgui.SameLine()
 
-		imgui.SetCursorPosX(imgui.GetWindowWidth() - 88)
+		imgui.SetCursorPosX(150)
 		imgui.Text('Раунды')
 		imgui.Tooltip('До скольки баллов будем играть?')
 		imgui.SameLine()
@@ -1405,7 +1404,7 @@ function imgui.Mirror()
 		imgui.Separator()
 		imgui.SetCursorPosY(imgui.GetCursorPosY() + 4)
 
-		imgui.MeNotepad('mirror')
+		imgui.MeNotepad('mirror', imgui.ImVec2(150, 250))
 	imgui.EndChild()
 end
 function imgui.ScrSettings()
@@ -1444,24 +1443,26 @@ function imgui.ScrSettings()
 	imgui.Tooltip('Это дополнительная задержка, при\nфлуде командой. Если у вас пишет\n"Не Флуди!", индивидуально\nувеличите задержку')
 end
 function imgui.AdvRules()
-	imgui.BeginChild(id_name..'child_window2',imgui.ImVec2(imgui.GetWindowWidth() - 12, imgui.GetWindowHeight() - 40),false)
-		if imgui.Button('Приветствие', imgui.ImVec2(250,30)) then
+	--imgui.SetCursorPosY(10)
+	imgui.BeginChild(id_name..'child_window2',imgui.ImVec2(imgui.GetWindowWidth() - 10, imgui.GetWindowHeight()-40), false, imgui.WindowFlags.NoScrollbar + imgui.WindowFlags.NoScrollWithMouse)
+	--imgui.SetCursorPosY(5)
+		if imgui.Button('Приветствие', imgui.ImVec2(270,32)) then
 			sampSendChat(u8:decode('Приветствую, вы готовы сдать ПРО?'))
 		end
 		imgui.Tooltip('В чат: Приветствую, вы готовы сдать ПРО?')
-		if imgui.Button('Вопрос №1', imgui.ImVec2(250,30)) then
+		if imgui.Button('Вопрос №1', imgui.ImVec2(270,30)) then
 			sampSendChat(u8:decode('Назови мне сокращение для автомобилей.'))
 		end
 		imgui.Tooltip('В чат: Назови мне сокращение для автомобилей.')
-		if imgui.Button('Вопрос №2', imgui.ImVec2(250,30)) then
+		if imgui.Button('Вопрос №2', imgui.ImVec2(270,32)) then
 			sampSendChat(u8:decode('Назови мне сокращение для аксессуаров.'))
 		end
 		imgui.Tooltip('В чат: Назови мне сокращение для аксессуаров.')
-		if imgui.Button('Вопрос №3', imgui.ImVec2(250,30)) then
+		if imgui.Button('Вопрос №3', imgui.ImVec2(270,30)) then
 			sampSendChat(u8:decode('Назови мне сокращение для аксессуаров.'))
 		end
 		imgui.Tooltip('В чат: Назови мне сокращение для аксессуаров.')
-		if imgui.Button('Вопрос №4', imgui.ImVec2(250,30)) then
+		if imgui.Button('Вопрос №4', imgui.ImVec2(270,32)) then
 			lua_thread.create(function()
 			sampSendChat(u8:decode('Допустим, пришло такое объявление:'))
 			wait(1000)
@@ -1471,7 +1472,7 @@ function imgui.AdvRules()
 			end)
 		end
 		imgui.Tooltip('В чат: Допустим, пришло такое объявление: \n "Продам БМВ Е34" \n Как ты его отредактируешь?')
-		if imgui.Button('Вопрос №5', imgui.ImVec2(250,30)) then
+		if imgui.Button('Вопрос №5', imgui.ImVec2(270,30)) then
 			lua_thread.create(function()
 				sampSendChat(u8:decode('Допустим, пришло такое объявление:'))
 				wait(1000)
@@ -1481,7 +1482,7 @@ function imgui.AdvRules()
 			end)
 		end
 		imgui.Tooltip('В чат: Допустим, пришло такое объявление: \n "Куплю чай по 5к штука" \n Как ты его отредактируешь?')
-		if imgui.Button('Сдал', imgui.ImVec2(121,30)) then
+		if imgui.Button('Сдал', imgui.ImVec2(131,32)) then
 			lua_thread.create(function()
 			sampSendChat(u8:decode('Поздравляю, вы сдали ПРО!'))
 			wait(100)
@@ -1490,7 +1491,7 @@ function imgui.AdvRules()
 		end
 		imgui.Tooltip('В чат: Поздравляю, вы сдали ПРО!')
 		imgui.SameLine()
-		if imgui.Button('Не сдал', imgui.ImVec2(121,30)) then
+		if imgui.Button('Не сдал', imgui.ImVec2(131,32)) then
 			lua_thread.create(function()
 			sampSendChat(u8:decode('К сожалению, вы не сдали ПРО.'))
 			wait(1000)
@@ -1676,39 +1677,40 @@ function imgui.FmInterviews()
 		if menu[i][3] then imgui.Tooltip(menu[i][3]) end
 	end
 end
-function imgui.newsRules()
-	imgui.BeginChild(id_name..'child_window3',imgui.ImVec2(imgui.GetWindowWidth() - 12, imgui.GetWindowHeight() - 40),false)
-	if imgui.Button('Приветствие', imgui.ImVec2(250,30)) then
+function imgui.NewsRules()
+	imgui.SetCursorPosY(15)
+	imgui.BeginChild(id_name..'child_window3',imgui.ImVec2(imgui.GetWindowWidth() - 10, imgui.GetWindowHeight() - 40),false)
+	if imgui.Button('Приветствие', imgui.ImVec2(270,32)) then
 		sampSendChat(u8:decode('Приветствую, вы готовы сдать ППЭ?'))
 	end
 	imgui.Tooltip('В чат: Приветствую, вы готовы сдать ППЭ?')
 
-	if imgui.Button('Вопрос №1', imgui.ImVec2(250,30)) then
+	if imgui.Button('Вопрос №1', imgui.ImVec2(270,30)) then
 		sampSendChat(u8:decode('Подскажи, что нужно сделать перед тем, как начать эфир?'))
 	end
 	imgui.Tooltip('В чат: Подскажи, что нужно сделать перед тем, как начать эфир?')
 
-	if imgui.Button('Вопрос №2', imgui.ImVec2(250,30)) then
+	if imgui.Button('Вопрос №2', imgui.ImVec2(270,32)) then
 		sampSendChat(u8:decode('Назови мне тэг нашей радиостанции в рации департамента'))
 	end
 	imgui.Tooltip('В чат: Назови мне тэг нашей радиостанции в рации департамента')
 
-	if imgui.Button('Вопрос №3', imgui.ImVec2(250,30)) then
+	if imgui.Button('Вопрос №3', imgui.ImVec2(270,30)) then
 		sampSendChat(u8:decode('Можно ли материться в эфирах?'))
 	end
 	imgui.Tooltip('В чат: Можно ли материться в эфирах?')
 
-	if imgui.Button('Вопрос №4', imgui.ImVec2(250,30)) then
+	if imgui.Button('Вопрос №4', imgui.ImVec2(270,32)) then
 		sampSendChat(u8:decode'Можно ли оскорблять кого-либо в эфирах?')
 	end
 	imgui.Tooltip('В чат: Можно ли оскорблять кого-либо в эфирах?')
 
-	if imgui.Button('Вопрос №5', imgui.ImVec2(250,30)) then
+	if imgui.Button('Вопрос №5', imgui.ImVec2(270,30)) then
 		sampSendChat(u8:decode'Можно ли проводить эфир без забития?')
 	end
 	imgui.Tooltip('Можно ли проводить эфир без забития?')
 
-	if imgui.Button('Сдал', imgui.ImVec2(121,30)) then
+	if imgui.Button('Сдал', imgui.ImVec2(131,33)) then
 		lua_thread.create(function()
 		sampSendChat(u8:decode('Поздравляю, вы сдали ППЭ!'))
 		wait(100)
@@ -1717,7 +1719,7 @@ function imgui.newsRules()
 	end
 	imgui.Tooltip('В чат: Поздравляю, вы сдали ППЭ!')
 	imgui.SameLine()
-	if imgui.Button('Не сдал', imgui.ImVec2(121,30)) then
+	if imgui.Button('Не сдал', imgui.ImVec2(131,33)) then
 		lua_thread.create(function()
 		sampSendChat(u8:decode('К сожалению, вы не сдали ППЭ.'))
 		wait(1000)
@@ -1728,21 +1730,23 @@ function imgui.newsRules()
 	imgui.EndChild()
 end
 function imgui.LeaderActions()
-	imgui.SliderInt('Выберите ранг', setrank, 0, 9, false)
-	if imgui.Button('Изменить ранг', imgui.ImVec2(185,23)) then
+	imgui.SetCursorPosY(15)
+	imgui.SliderInt(id_name..'Rank', setrank, 0, 9, false)
+	imgui.Tooltip('Выберите ранг')
+	if imgui.Button('Изменить ранг', imgui.ImVec2(185,28)) then
 		sampSendChat('/giverank ' ..tmp.targetPlayer.nick.. ' '..setrank[0])
 	end
 	imgui.Separator()
 
 	imgui.InputTextWithHint('##Input1', 'Причина выговора', WReason, 100)
 	reas = u8:decode(ffi.string(WReason))
-	if imgui.Button('Выдать выговор', imgui.ImVec2(185,23)) then
+	if imgui.Button('Выдать выговор', imgui.ImVec2(185,28)) then
 		sampSendChat('/fwarn '..tmp.targetPlayer.nick..' '..reas)
 	end
 
 	imgui.InputTextWithHint('##Input', 'Причина снятия выговора', unwarn, 100)
 	ureas = u8:decode(ffi.string(unwarn))
-	if imgui.Button('Снять выговор', imgui.ImVec2(185,23)) then
+	if imgui.Button('Снять выговор', imgui.ImVec2(185,28)) then
 		sampSendChat('/unfwarn '..tmp.targetPlayer.nick..' '..ureas)
 	end
 
@@ -1750,7 +1754,7 @@ function imgui.LeaderActions()
 
 	imgui.InputTextWithHint('##Input2', 'Причина выдачи похвалы', praise, 100)
 	prais = u8:decode(ffi.string(praise))
-	if imgui.Button('Выдать похвалу', imgui.ImVec2(185,23)) then
+	if imgui.Button('Выдать похвалу', imgui.ImVec2(185,28)) then
 		sampSendChat('/praise '..tmp.targetPlayer.nick.. ' '..prais)
 	end
 
@@ -2012,7 +2016,7 @@ function imgui.RenderButtonEf(array, tagConcept, func)
 		local t = t or false
 		for i, but in ipairs(arr) do
 			imgui.SetCursorPosX((t and imgui.GetWindowWidth() / 1.334 - 60 + 4 or imgui.GetWindowWidth() / 4 - 69))
-			if imgui.Button(but[1]..id_name..'button_EF_'.. (t and '' or 'rp_') ..i, (t and imgui.ImVec2(120, 37) or imgui.ImVec2(138, 27))) then
+			if imgui.Button(but[1]..id_name..'button_EF_'.. (t and '' or 'rp_') ..i, (t and imgui.ImVec2(120, 27) or imgui.ImVec2(135, 27))) then
 				if tmp.sNewsEv then sampAddChatMessage(u8:decode(tag .. (t and 'RP действия уже отыгрываются, подождите пока закончится.' or 'Вы уже в эфире! Подождите, пока закончится предыдущее вещание!')), -1)
 				else
 					local loFuBtn = {}
@@ -2142,7 +2146,7 @@ function imgui.EditingTableEf(arrBtn, arrTag, arrName, i)
 			
 			imgui.SameLine()
 			imgui.BeginChild(id_name..'child_window_t_2', imgui.ImVec2((imgui.GetWindowWidth() / 4 - 23), 80), false)
-				imgui.SetCursorPos(imgui.ImVec2((i ~= 0 and 12 or 3), 5))
+				imgui.SetCursorPos(imgui.ImVec2((i ~= 0 and 12 or 3), 0))
 				imgui.Text('{tag} в данном эфире:')
 
 				local sizeText = imgui.CalcTextSize(esterscfg.events[arrName].tag).x + 9
@@ -2159,8 +2163,8 @@ function imgui.EditingTableEf(arrBtn, arrTag, arrName, i)
 
 				imgui.Tooltip((sizeText > iptHeight and str(iptTags)..'\n\n' or '') ..'    Измените на нужный Вам!\nИзменения применяются сразу')
 
-				imgui.SetCursorPos(imgui.ImVec2(imgui.GetWindowWidth() - 70, imgui.GetWindowHeight() - 20))
-				if imgui.Button((tmp.varEvIptMulti and 'Вернуть' or 'Проверить')..id_name..'btn_'..i, imgui.ImVec2(70, 20)) then
+				imgui.SetCursorPos(imgui.ImVec2(30, 55))
+				if imgui.Button((tmp.varEvIptMulti and 'Вернуть' or 'Проверить')..id_name..'btn_'..i, imgui.ImVec2(75, 25)) then
 					tmp.varEvIptMulti = not tmp.varEvIptMulti
 				end
 				imgui.Tooltip('Покажет отформатированный\nвариант текста, с заменой тегов.\nИзменять текст в таком виде нельзя')
@@ -2669,7 +2673,8 @@ function resetIO()
     imgui.GetIO().KeyAlt = false
     imgui.GetIO().KeySuper = false
 end
-addEventHandler('onWindowMessage', function(msg, key) 
+addEventHandler('onWindowMessage', function(msg, key)
+	if not hotkey then return end
 	if isSampAvailable() then
 		if (msg == 0x0100 or msg == 260) and not sampIsChatInputActive() then 
 			if hotkey.EditKey == nil then
@@ -2936,22 +2941,16 @@ function loadVar()
 		['events'] = {
 			['write'] = {'Написать в /news', '/news {tag}'},
 			['actions'] = {
-				{'      Начать \n(RP Действие)',
-					'/me подошел к рабочему столу и включил ноутбук рабочий',
-					'/do Спустя 30 секунд ноутбук был включен.',
-					'/me включил микрофон и достал из ящика наушники',
-					'/me подсоеденил все к сети питания',
-					'/do Вскоре все было готово.',
-					'/me надел наушники на голову',
-					'/me пододвинул кресло к себе, сел на него и приготовился к эфиру',
-					'/todo Раз, два, три - это проверка связи!*говоря в микрофон',
-					'/do Всё работает и готово к трансляции.'
-				}, {'    Закончить \n(RP Действие)',
-					'/me выключил микрофон и снял наушники с головы',
-					'/me убрал наушники в ящик рабочего стола',
-					'/me нажал пару кнопок и выключил рабочий ноутбук',
-					'/do Вся аппаратура была успешно отключена.',
-					'/me отодвинул кресло, встал с него и направился к выходу'
+				{'RP начало',
+					'/me протянул руку к ноутбуку, после чего нажал на кнопку включения, а затем сел на кресло.',
+          			'/do Ноутбук успешно включился.',
+          			'/me зашел в программу {server}" News", нажал на {city}, выбрал "Математика" и нажал на кнопку "Начать".',
+          			'/me пододвинул к себе стойку с микрофоном, а затем включил его.'
+				}, {'RP конец',
+					'/me отодвинул от себя стойку с микрофоном, нажал на кнопку его выключения.',
+        			'/me в программе "{server} News" нажал на "Завершить", после чего выключил ноутбук.',
+    				'/do Спустя какое-то время ноутбук выключился.',
+    				'/me закрыл крышку, а затем встал с кресла и направился к выходу из комнаты.'
 				}, ['name'] = 'actions'
 			},
 			['mathem'] = {
@@ -3425,7 +3424,7 @@ function Style()
     style.WindowRounding = 10.0
     style.ChildRounding = 6.0
     style.FramePadding = imgui.ImVec2(8, 7)
-    style.FrameRounding = 8.0
+    style.FrameRounding = 5.0
     style.ItemSpacing = imgui.ImVec2(8, 8)
     style.ItemInnerSpacing = imgui.ImVec2(10, 6)
     style.IndentSpacing = 25.0
@@ -3440,7 +3439,7 @@ function Style()
     style.Colors[imgui.Col.Text]                   = imgui.ImVec4(0.90, 0.90, 0.93, 1.00)
     style.Colors[imgui.Col.TextDisabled]           = imgui.ImVec4(0.40, 0.40, 0.45, 1.00)
     style.Colors[imgui.Col.WindowBg]               = imgui.ImVec4(0.12, 0.12, 0.14, 1.00)
-    style.Colors[imgui.Col.PopupBg]                = imgui.ImVec4(0.13, 0.13, 0.15, 1.00)
+    style.Colors[imgui.Col.PopupBg]                = imgui.ImVec4(0.18, 0.20, 0.22, 1.00)
     style.Colors[imgui.Col.Border]                 = imgui.ImVec4(0.30, 0.30, 0.35, 1.00)
     style.Colors[imgui.Col.BorderShadow]           = imgui.ImVec4(0.00, 0.00, 0.00, 0.00)
     style.Colors[imgui.Col.FrameBg]                = imgui.ImVec4(0.18, 0.18, 0.20, 1.00)
@@ -3470,7 +3469,7 @@ function Style()
     style.Colors[imgui.Col.ResizeGripHovered]      = imgui.ImVec4(0.25, 0.25, 0.28, 1.00)
     style.Colors[imgui.Col.ResizeGripActive]       = imgui.ImVec4(0.30, 0.30, 0.34, 1.00)
     style.Colors[imgui.Col.PlotLines]              = imgui.ImVec4(0.61, 0.61, 0.64, 1.00)
-    style.Colors[imgui.Col.PopupBg]                = imgui.ImVec4(0, 0.60, 0.64, 1.00)
+    --style.Colors[imgui.Col.PopupBg]                = imgui.ImVec4(0, 0.60, 0.64, 1.00)
     style.Colors[imgui.Col.PlotLinesHovered]       = imgui.ImVec4(0.70, 0.70, 0.75, 1.00)
     style.Colors[imgui.Col.PlotHistogram]          = imgui.ImVec4(0.61, 0.61, 0.64, 1.00)
     style.Colors[imgui.Col.PlotHistogramHovered]   = imgui.ImVec4(0.70, 0.70, 0.75, 1.00)
