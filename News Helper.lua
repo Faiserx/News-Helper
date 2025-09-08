@@ -1,5 +1,5 @@
 script_name('News Helper')
-script_version('3.0')
+script_version('3.1')
 script_description('Хелпер для СМИ')
 script_authors('fa1ser, kvisk')
 
@@ -48,12 +48,10 @@ local winSet = {0, {}}
 update_state = false -- Если переменная == true, значит начнётся обновление.
 update_found = false -- Если будет true, будет доступна команда /update.
 
-local script_vers = 3.0
-local script_vers_text = "3.0 release" -- Название нашей версии. В будущем будем её выводить пользователю.
-
+local script_vers = tonumber(thisScript().version)
+local script_vers_text = "3.1" -- Название нашей версии. В будущем будем её выводить пользователю.
 local update_url = 'https://raw.githubusercontent.com/Faiserx/News-Helper/refs/heads/main/update.ini' -- Путь к ini файлу. Позже нам понадобиться.
 local update_path = getWorkingDirectory() .. "/update.ini"
-
 local script_url = 'https://raw.githubusercontent.com/Faiserx/News-Helper/refs/heads/main/News%20Helper.lua' -- Путь скрипту.
 local script_path = thisScript().path
 
@@ -65,9 +63,11 @@ function check_update()
                 if tonumber(iniData.info.vers) > script_vers then
                     sampAddChatMessage(u8:decode(tag .. 'Обнаружена новая версия скрипта: ' .. iniData.info.vers_text), -1)
                     update_found = true
+				else
+					sampAddChatMessage(u8:decode(tag .. 'Обновление не найдено.'), 0x008080)
                 end
             else
-                sampAddChatMessage(u8:decode(tag .. 'Ошибка проверки обновления. Попробуйте еще раз!'), -1)
+                sampAddChatMessage(u8:decode(tag .. 'Ошибка проверки обновления. Попробуйте еще раз!'), 0x008080)
             end
             os.remove(update_path)
         end
@@ -83,7 +83,6 @@ function main()
 	
 	if not doesDirectoryExist('moonloader\\config\\News Helper') then createDirectory('moonloader\\config\\News Helper') end
 
-	--------------------------------------------------
 	adcfg = loadFile('advertisement.cfg', {})
 	helbincfg = loadFile('helpBind.cfg', newsHelpBind)
 	autbincfg = loadFile('autoBind.cfg', newsAutoBind)
@@ -94,7 +93,6 @@ function main()
 	msgDelay = new.int(esterscfg.settings.delay) 
 	newsDelay = new.int(setup.newsDelay) 
 	iptTmp = {['notepad'] = {}} 
-	-----------------------------------------------------
 
 	sampRegisterChatCommand('nh', openMenu)
 
@@ -113,13 +111,15 @@ function main()
 			end
 		end
 	end)
-	sampAddChatMessage(u8:decode(tag .. 'Активация: {6495ED}/nh{C0C0C0}. Приятного пользования!'), 0xFFFFFF)
+
+	while not sampIsLocalPlayerSpawned() do wait(10000) end
+	sampAddChatMessage(u8:decode(tag .. 'Активация: {6495ED}/nh{C0C0C0}. Приятного пользования!'), 0x008080)
 	while true do
 		wait(0)
 		if update_state then -- Если человек напишет /update и обновлени есть, начнётся скаачивание скрипта.
             downloadUrlToFile(script_url, script_path, function(id, status)
                 if status == dlstatus.STATUS_ENDDOWNLOADDATA then
-                    sampAddChatMessage(u8:decode(tag..'Скрипт успешно обновлен, перезагружаюсь...'), -1)
+                    sampAddChatMessage(u8:decode(tag..'Скрипт успешно обновлен, перезагружаюсь...'), 0x008080)
                 end
             end)
             break
